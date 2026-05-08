@@ -1,7 +1,7 @@
 ﻿using CommentsSPATask.Domain.Abstractions;
-using CommentsSPATask.Domain.Captcha.Events;
+using CommentsSPATask.Domain.Captchas.Events;
 
-namespace CommentsSPATask.Domain.Captcha;
+namespace CommentsSPATask.Domain.Captchas;
 
 public sealed class Captcha : Entity
 {
@@ -61,10 +61,27 @@ public sealed class Captcha : Entity
     public void MarkAsUsed()
     {
         IsUsed.SetUsed();
+        RaiseDomainEvent(new CaptchaUsedDomainEvent(Id));
     }
 
     public void RegisterFailedAttempt()
     {
         FailedAttemptsCount.Increment();
+
+        if (IsBlocked())
+        {
+            RaiseDomainEvent(new CaptchaBlockedDomainEvent(Id));
+        }
+    }
+
+    public bool MarkAsExpiredIfNeeded(DateTime utcNow)
+    {
+        if (!IsExpired(utcNow))
+        {
+            return false;
+        }
+
+        RaiseDomainEvent(new CaptchaExpiredDomainEvent(Id));
+        return true;
     }
 }

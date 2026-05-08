@@ -1,4 +1,4 @@
-namespace CommentsSPATask.Domain.Captcha;
+namespace CommentsSPATask.Domain.Captchas;
 
 public sealed record IsUsed
 {

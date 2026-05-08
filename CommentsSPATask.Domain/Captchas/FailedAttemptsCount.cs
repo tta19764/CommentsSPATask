@@ -1,6 +1,6 @@
 using CommentsSPATask.Domain.Abstractions;
 
-namespace CommentsSPATask.Domain.Captcha;
+namespace CommentsSPATask.Domain.Captchas;
 
 public sealed record FailedAttemptsCount(int Value = 0)
 {

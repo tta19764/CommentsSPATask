@@ -1,0 +1,111 @@
+using CommentsSPATask.Application.Abstractions.Data;
+using CommentsSPATask.Application.Abstractions.Messaging;
+using CommentsSPATask.Domain.Abstractions;
+using CommentsSPATask.Domain.Comments;
+using Microsoft.EntityFrameworkCore;
+
+namespace CommentsSPATask.Application.Comments.Queries.GetCommentThread;
+
+public sealed class GetCommentThreadQueryHandler(IApplicationDbContext context)
+    : IQueryHandler<GetCommentThreadQuery, CommentThreadResponse>
+{
+    public async Task<Result<CommentThreadResponse>> Handle(
+        GetCommentThreadQuery request,
+        CancellationToken cancellationToken)
+    {
+        var rootComment = await context.Comments
+            .AsNoTracking()
+            .Where(comment => comment.Id == request.CommentId)
+            .Select(comment => new CommentThreadRow(
+                comment.Id,
+                comment.ParentId,
+                comment.UserName.Value,
+                comment.Email.Value,
+                comment.HomePage != null ? comment.HomePage.Value : null,
+                comment.Text.Value,
+                comment.CreatedAtUtc))
+            .SingleOrDefaultAsync(cancellationToken);
+
+        if (rootComment is null)
+        {
+            return Result.Failure<CommentThreadResponse>(CommentErrors.NotFound);
+        }
+
+        var allComments = await context.Comments
+            .AsNoTracking()
+            .Where(comment => comment.Id == request.CommentId || comment.ParentId != null)
+            .Select(comment => new CommentThreadRow(
+                comment.Id,
+                comment.ParentId,
+                comment.UserName.Value,
+                comment.Email.Value,
+                comment.HomePage != null ? comment.HomePage.Value : null,
+                comment.Text.Value,
+                comment.CreatedAtUtc))
+            .ToListAsync(cancellationToken);
+
+        var commentIds = allComments.Select(comment => comment.Id).ToArray();
+
+        var attachments = commentIds.Length == 0
+            ? new Dictionary<Guid, List<CommentAttachmentResponse>>()
+            : await context.Attachments
+                .AsNoTracking()
+                .Where(attachment => commentIds.AsEnumerable().Contains(attachment.CommentId))
+                .GroupBy(attachment => attachment.CommentId)
+                .ToDictionaryAsync(
+                    group => group.Key,
+                    group => group
+                        .Select(attachment => new CommentAttachmentResponse(
+                            attachment.Id,
+                            attachment.OriginalFileName.Value,
+                            attachment.StoredFileName.Value,
+                            attachment.ContentType))
+                        .ToList(),
+                    cancellationToken);
+
+        var commentById = allComments.ToDictionary(comment => comment.Id);
+
+        var lookup = allComments
+            .ToLookup(comment => comment.ParentId);
+
+        var thread = MapThread(rootComment.Id, commentById, lookup, attachments);
+
+        return Result.Success(thread);
+    }
+
+    private static CommentThreadResponse MapThread(
+        Guid commentId,
+        IReadOnlyDictionary<Guid, CommentThreadRow> commentById,
+        ILookup<Guid?, CommentThreadRow> lookup,
+        IReadOnlyDictionary<Guid, List<CommentAttachmentResponse>> attachments)
+    {
+        var comment = commentById[commentId];
+
+        var replies = lookup[commentId]
+            .OrderBy(child => child.CreatedAtUtc)
+            .Select(child => MapThread(child.Id, commentById, lookup, attachments))
+            .ToList();
+
+        return new CommentThreadResponse(
+            comment.Id,
+            comment.ParentId,
+            comment.UserName,
+            comment.Email,
+            comment.HomePage,
+            comment.Text,
+            comment.CreatedAtUtc,
+            attachments.TryGetValue(comment.Id, out var commentAttachments)
+                ? commentAttachments
+                : [],
+            replies);
+    }
+
+    private sealed record CommentThreadRow(
+        Guid Id,
+        Guid? ParentId,
+        string UserName,
+        string Email,
+        string? HomePage,
+        string Text,
+        DateTime CreatedAtUtc);
+}
