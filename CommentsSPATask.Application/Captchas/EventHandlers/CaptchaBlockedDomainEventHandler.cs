@@ -18,7 +18,7 @@ public sealed class CaptchaBlockedDomainEventHandler(
             return;
         }
 
-        await captchaRepository.RemoveAsync(captcha, cancellationToken);
+        captchaRepository.Remove(captcha);
         await unitOfWork.SaveChangesAsync(cancellationToken);
     }
 }

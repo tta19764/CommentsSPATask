@@ -99,7 +99,7 @@ public sealed class CreateCommentCommandHandler(
             string.IsNullOrWhiteSpace(request.HomePage) ? null : new HomePage(request.HomePage),
             new CommentText(sanitizedTextResult.Value));
 
-        await commentRepository.AddAsync(comment, cancellationToken);
+        commentRepository.Add(comment);
         logger.LogInformation("Comment {CommentId} was created and queued for persistence", comment.Id);
 
         if (request.Attachment is not null)
@@ -125,7 +125,7 @@ public sealed class CreateCommentCommandHandler(
                 preparedAttachment.ContentType,
                 nowUtc);
 
-            await attachmentRepository.AddAsync(attachment, cancellationToken);
+            attachmentRepository.Add(attachment);
             logger.LogInformation("Attachment {AttachmentId} was created for comment {CommentId}", attachment.Id, comment.Id);
         }
 

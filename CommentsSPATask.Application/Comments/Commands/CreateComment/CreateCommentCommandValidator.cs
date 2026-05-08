@@ -6,7 +6,7 @@ namespace CommentsSPATask.Application.Comments.Commands.CreateComment;
 public sealed partial class CreateCommentCommandValidator : AbstractValidator<CreateCommentCommand>
 {
     private const int MaxUserNameLength = 50;
-    private const int MaxEmailLength = 250;
+    private const int MaxEmailLength = 100;
     private const int MaxHomePageLength = 250;
     private const int MaxCaptchaLength = 10;
     private const int MaxTextLength = 2500;

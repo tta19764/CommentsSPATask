@@ -1,12 +1,15 @@
 using CommentsSPATask.Application.Abstractions.Data;
 using CommentsSPATask.Application.Abstractions.Messaging;
 using CommentsSPATask.Domain.Abstractions;
+using CommentsSPATask.Domain.Attachments;
 using CommentsSPATask.Domain.Comments;
 using Microsoft.EntityFrameworkCore;
 
 namespace CommentsSPATask.Application.Comments.Queries.GetCommentThread;
 
-public sealed class GetCommentThreadQueryHandler(IApplicationDbContext context)
+public sealed class GetCommentThreadQueryHandler(
+    IApplicationDbContext context,
+    IAttachmentRepository attachmentRepository)
     : IQueryHandler<GetCommentThreadQuery, CommentThreadResponse>
 {
     public async Task<Result<CommentThreadResponse>> Handle(
@@ -44,24 +47,20 @@ public sealed class GetCommentThreadQueryHandler(IApplicationDbContext context)
                 comment.CreatedAtUtc))
             .ToListAsync(cancellationToken);
 
-        var commentIds = allComments.Select(comment => comment.Id).ToArray();
+        var attachments = new Dictionary<Guid, IReadOnlyCollection<CommentAttachmentResponse>>(allComments.Count);
 
-        var attachments = commentIds.Length == 0
-            ? new Dictionary<Guid, List<CommentAttachmentResponse>>()
-            : await context.Attachments
-                .AsNoTracking()
-                .Where(attachment => commentIds.AsEnumerable().Contains(attachment.CommentId))
-                .GroupBy(attachment => attachment.CommentId)
-                .ToDictionaryAsync(
-                    group => group.Key,
-                    group => group
-                        .Select(attachment => new CommentAttachmentResponse(
-                            attachment.Id,
-                            attachment.OriginalFileName.Value,
-                            attachment.StoredFileName.Value,
-                            attachment.ContentType))
-                        .ToList(),
-                    cancellationToken);
+        foreach (var comment in allComments)
+        {
+            var commentAttachments = await attachmentRepository.GetByCommentIdAsync(comment.Id, cancellationToken);
+
+            attachments[comment.Id] = commentAttachments
+                .Select(attachment => new CommentAttachmentResponse(
+                    attachment.Id,
+                    attachment.OriginalFileName.Value,
+                    attachment.StoredFileName.Value,
+                    attachment.ContentType))
+                .ToList();
+        }
 
         var commentById = allComments.ToDictionary(comment => comment.Id);
 
@@ -77,7 +76,7 @@ public sealed class GetCommentThreadQueryHandler(IApplicationDbContext context)
         Guid commentId,
         IReadOnlyDictionary<Guid, CommentThreadRow> commentById,
         ILookup<Guid?, CommentThreadRow> lookup,
-        IReadOnlyDictionary<Guid, List<CommentAttachmentResponse>> attachments)
+        IReadOnlyDictionary<Guid, IReadOnlyCollection<CommentAttachmentResponse>> attachments)
     {
         var comment = commentById[commentId];
 

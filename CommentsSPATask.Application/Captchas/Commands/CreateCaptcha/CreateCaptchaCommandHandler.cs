@@ -29,7 +29,7 @@ public sealed class CreateCaptchaCommandHandler(
             createdAtUtc,
             expiresAtUtc);
 
-        await captchaRepository.AddAsync(captcha, cancellationToken);
+        captchaRepository.Add(captcha);
         await unitOfWork.SaveChangesAsync(cancellationToken);
         logger.LogInformation("Captcha {CaptchaId} was persisted successfully", captcha.Id);
 

@@ -2,9 +2,9 @@ namespace CommentsSPATask.Domain.Captchas;
 
 public interface ICaptchaRepository
 {
-    Task AddAsync(Captcha captcha, CancellationToken cancellationToken = default);
+    void Add(Captcha captcha);
 
     Task<Captcha?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default);
 
-    Task RemoveAsync(Captcha captcha, CancellationToken cancellationToken = default);
+    void Remove(Captcha captcha);
 }

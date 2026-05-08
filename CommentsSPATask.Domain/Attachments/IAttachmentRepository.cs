@@ -2,7 +2,7 @@ namespace CommentsSPATask.Domain.Attachments;
 
 public interface IAttachmentRepository
 {
-    Task AddAsync(Attachment attachment, CancellationToken cancellationToken = default);
+    void Add(Attachment attachment);
 
     Task<Attachment?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default);
 

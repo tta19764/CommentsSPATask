@@ -2,6 +2,7 @@ using CommentsSPATask.Application.Abstractions.Data;
 using CommentsSPATask.Application.Abstractions.Messaging;
 using CommentsSPATask.Application.Comments.Queries;
 using CommentsSPATask.Domain.Abstractions;
+using CommentsSPATask.Domain.Attachments;
 using Microsoft.Extensions.Logging;
 using Microsoft.EntityFrameworkCore;
 
@@ -9,6 +10,7 @@ namespace CommentsSPATask.Application.Comments.Queries.GetCommentsPage;
 
 public sealed class GetCommentsPageQueryHandler(
     IApplicationDbContext context,
+    IAttachmentRepository attachmentRepository,
     ILogger<GetCommentsPageQueryHandler> logger)
     : IQueryHandler<GetCommentsPageQuery, IReadOnlyCollection<CommentSummaryResponse>>
 {
@@ -42,25 +44,21 @@ public sealed class GetCommentsPageQueryHandler(
                 comment.Text.Value,
                 comment.CreatedAtUtc))
             .ToListAsync(cancellationToken);
+        
+        var attachments = new Dictionary<Guid, IReadOnlyCollection<CommentAttachmentResponse>>(comments.Count);
 
-        var commentIds = comments.Select(comment => comment.Id).ToArray();
+        foreach (var comment in comments)
+        {
+            var commentAttachments = await attachmentRepository.GetByCommentIdAsync(comment.Id, cancellationToken);
 
-        var attachments = commentIds.Length == 0
-            ? new Dictionary<Guid, List<CommentAttachmentResponse>>()
-            : await context.Attachments
-                .AsNoTracking()
-                .Where(attachment => commentIds.AsEnumerable().Contains(attachment.CommentId))
-                .GroupBy(attachment => attachment.CommentId)
-                .ToDictionaryAsync(
-                    group => group.Key,
-                    group => group
-                        .Select(attachment => new CommentAttachmentResponse(
-                            attachment.Id,
-                            attachment.OriginalFileName.Value,
-                            attachment.StoredFileName.Value,
-                            attachment.ContentType))
-                        .ToList(),
-                    cancellationToken);
+            attachments[comment.Id] = commentAttachments
+                .Select(attachment => new CommentAttachmentResponse(
+                    attachment.Id,
+                    attachment.OriginalFileName.Value,
+                    attachment.StoredFileName.Value,
+                    attachment.ContentType))
+                .ToList();
+        }
 
         var items = comments
             .Select(comment => new CommentSummaryResponse(
