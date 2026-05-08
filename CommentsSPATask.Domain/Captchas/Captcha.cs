@@ -44,8 +44,6 @@ public sealed class Captcha : Entity
             new IsUsed(), 
             new FailedAttemptsCount());
         
-        captcha.RaiseDomainEvent(new CaptchaCreatedDomainEvent(captcha.Id));
-        
         return captcha;
     }
 
