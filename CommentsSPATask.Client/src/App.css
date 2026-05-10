@@ -1,0 +1,131 @@
+body {
+  background: #f6f8fb;
+}
+
+.comment-card {
+  transition:
+    border-color 0.15s ease,
+    box-shadow 0.15s ease,
+    transform 0.15s ease;
+}
+
+.comment-card:hover {
+  border-color: var(--bs-primary-border-subtle);
+  box-shadow: var(--bs-box-shadow-sm);
+  transform: translateY(-1px);
+}
+
+.comment-card:focus-visible {
+  outline: 0.25rem solid rgba(var(--bs-primary-rgb), 0.25);
+  outline-offset: 0.125rem;
+}
+
+.comment-text {
+  line-height: 1.55;
+  white-space: pre-wrap;
+}
+
+.attachment-thumbnail {
+  width: 6rem;
+  height: 4.5rem;
+  border-radius: var(--bs-border-radius);
+  cursor: zoom-in;
+  object-fit: cover;
+  transition:
+    filter 0.18s ease,
+    transform 0.18s ease,
+    box-shadow 0.18s ease;
+}
+
+.attachment-thumbnail:hover {
+  filter: brightness(1.04);
+  box-shadow: var(--bs-box-shadow);
+  transform: scale(1.04);
+}
+
+.inline-thread {
+  border-top: var(--bs-border-width) solid var(--bs-border-color);
+  cursor: default;
+}
+
+.thread-replies {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.reply-branch {
+  position: relative;
+  margin-left: 0.75rem;
+  padding-left: 1rem;
+}
+
+.reply-branch::before {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  width: 0.125rem;
+  border-radius: 999px;
+  background: var(--bs-primary-border-subtle);
+  content: "";
+}
+
+.attachment-preview-content {
+  max-height: calc(100vh - 3rem);
+  animation: lightbox-zoom-in 0.22s ease-out;
+}
+
+.attachment-preview-body {
+  min-height: 20rem;
+  padding: 0;
+}
+
+.attachment-preview-body img,
+.attachment-preview-body iframe {
+  width: 100%;
+  height: min(44rem, calc(100vh - 9rem));
+  border: 0;
+}
+
+.attachment-preview-body img {
+  padding: 1rem;
+  background: var(--bs-dark);
+  object-fit: contain;
+}
+
+.attachment-lightbox-dialog {
+  animation: lightbox-rise-in 0.22s ease-out;
+}
+
+.modal-backdrop.show {
+  animation: lightbox-fade-in 0.18s ease-out;
+}
+
+@keyframes lightbox-fade-in {
+  from {
+    opacity: 0;
+  }
+}
+
+@keyframes lightbox-rise-in {
+  from {
+    transform: translateY(1rem) scale(0.98);
+  }
+}
+
+@keyframes lightbox-zoom-in {
+  from {
+    opacity: 0;
+    transform: scale(0.96);
+  }
+}
+
+.captcha-preview {
+  width: 10rem;
+  height: 3.5rem;
+}
+
+.captcha-preview img {
+  max-width: 100%;
+  max-height: 100%;
+}
