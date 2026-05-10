@@ -1,3 +1,5 @@
+using System;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
 namespace CommentsSPATask.Api.Endpoints.Comments;
@@ -21,9 +23,6 @@ public sealed class CreateCommentRequest
 
     [FromForm]
     public string CaptchaInput { get; init; } = string.Empty;
-
-    [FromForm]
-    public Guid? ParentId { get; init; }
 
     [FromForm]
     public IFormFile? Attachment { get; init; }

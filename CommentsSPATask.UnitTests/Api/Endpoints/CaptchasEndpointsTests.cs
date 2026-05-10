@@ -20,7 +20,6 @@ public sealed class CaptchasEndpointsTests : EndpointTestBase
             .ReturnsAsync(Result.Success(response));
 
         var result = await CaptchasEndpoints.CreateCaptcha(
-            new CreateCaptchaRequest(),
             sender.Object,
             CancellationToken.None);
 
@@ -40,7 +39,6 @@ public sealed class CaptchasEndpointsTests : EndpointTestBase
             .ReturnsAsync(Result.Failure<CreateCaptchaResponse>(error));
 
         var result = await CaptchasEndpoints.CreateCaptcha(
-            new CreateCaptchaRequest(),
             sender.Object,
             CancellationToken.None);
 

@@ -37,7 +37,6 @@ public static class CaptchasEndpoints
     }
 
     public static async Task<IResult> CreateCaptcha(
-        CreateCaptchaRequest _,
         ISender sender,
         CancellationToken cancellationToken)
     {

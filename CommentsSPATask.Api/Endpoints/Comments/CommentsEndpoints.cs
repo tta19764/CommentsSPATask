@@ -40,8 +40,17 @@ public static class CommentsEndpoints
 
         group.MapPost(string.Empty, CreateComment)
             .WithName(nameof(CreateComment))
-            .WithSummary("Create a comment")
-            .WithDescription("Creates a root comment or reply. Accepts multipart form data and an optional attachment file. Returns an ApiResponse where data contains the created comment identifier.")
+            .WithSummary("Create a root comment")
+            .WithDescription("Creates a root comment. Accepts multipart form data and an optional attachment file. Returns an ApiResponse where data contains the created comment identifier.")
+            .Accepts<CreateCommentRequest>("multipart/form-data")
+            .Produces<ApiResponse<Guid>>(StatusCodes.Status201Created)
+            .Produces<ApiResponse<Guid>>(StatusCodes.Status400BadRequest)
+            .DisableAntiforgery();
+
+        group.MapPost("{parentId:guid}/replies", CreateReply)
+            .WithName(nameof(CreateReply))
+            .WithSummary("Create a reply")
+            .WithDescription("Creates a reply for the specified parent comment. Accepts multipart form data and an optional attachment file. Returns an ApiResponse where data contains the created comment identifier.")
             .Accepts<CreateCommentRequest>("multipart/form-data")
             .Produces<ApiResponse<Guid>>(StatusCodes.Status201Created)
             .Produces<ApiResponse<Guid>>(StatusCodes.Status400BadRequest)
@@ -84,6 +93,32 @@ public static class CommentsEndpoints
         ISender sender,
         CancellationToken cancellationToken)
     {
+        return await CreateCommentCore(
+            request,
+            parentId: null,
+            sender,
+            cancellationToken);
+    }
+
+    public static async Task<IResult> CreateReply(
+        Guid parentId,
+        [FromForm] CreateCommentRequest request,
+        ISender sender,
+        CancellationToken cancellationToken)
+    {
+        return await CreateCommentCore(
+            request,
+            parentId,
+            sender,
+            cancellationToken);
+    }
+
+    private static async Task<IResult> CreateCommentCore(
+        CreateCommentRequest request,
+        Guid? parentId,
+        ISender sender,
+        CancellationToken cancellationToken)
+    {
         FileUpload? attachment = null;
 
         if (request.Attachment is not null)
@@ -102,7 +137,7 @@ public static class CommentsEndpoints
             request.Text,
             request.CaptchaId,
             request.CaptchaInput,
-            request.ParentId,
+            parentId,
             attachment);
 
         var result = await sender.Send(command, cancellationToken);

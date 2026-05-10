@@ -87,7 +87,6 @@ public sealed class CommentsEndpointsTests : EndpointTestBase
             Text = "text",
             CaptchaId = Guid.NewGuid(),
             CaptchaInput = "ABCDE",
-            ParentId = Guid.NewGuid(),
             Attachment = CreateFormFile("hello.txt", "text/plain", "hello")
         };
 
@@ -99,7 +98,7 @@ public sealed class CommentsEndpointsTests : EndpointTestBase
                     command.Text == request.Text &&
                     command.CaptchaId == request.CaptchaId &&
                     command.CaptchaInput == request.CaptchaInput &&
-                    command.ParentId == request.ParentId &&
+                    command.ParentId == null &&
                     command.Attachment != null &&
                     command.Attachment.FileName == "hello.txt" &&
                     command.Attachment.ContentType == "text/plain" &&
@@ -108,6 +107,51 @@ public sealed class CommentsEndpointsTests : EndpointTestBase
             .ReturnsAsync(Result.Success(commentId));
 
         var result = await CommentsEndpoints.CreateComment(
+            request,
+            sender.Object,
+            CancellationToken.None);
+
+        var created = Assert.IsType<CreatedAtRoute<ApiResponse<Guid>>>(result);
+        Assert.Equal(commentId, created.Value?.Data);
+        Assert.Equal(nameof(CommentsEndpoints.GetCommentThread), created.RouteName);
+        Assert.Equal(commentId, created.RouteValues?["id"]);
+    }
+
+    [Fact]
+    public async Task CreateReply_ShouldReturnCreatedAtRoute_WhenCommandSucceeds()
+    {
+        var sender = CreateSender();
+        var commentId = Guid.NewGuid();
+        var parentId = Guid.NewGuid();
+        var request = new CreateCommentRequest
+        {
+            UserName = "User1",
+            Email = "user1@example.com",
+            HomePage = "https://example.com",
+            Text = "text",
+            CaptchaId = Guid.NewGuid(),
+            CaptchaInput = "ABCDE",
+            Attachment = CreateFormFile("hello.txt", "text/plain", "hello")
+        };
+
+        sender.Setup(x => x.Send(
+                It.Is<CreateCommentCommand>(command =>
+                    command.UserName == request.UserName &&
+                    command.Email == request.Email &&
+                    command.HomePage == request.HomePage &&
+                    command.Text == request.Text &&
+                    command.CaptchaId == request.CaptchaId &&
+                    command.CaptchaInput == request.CaptchaInput &&
+                    command.ParentId == parentId &&
+                    command.Attachment != null &&
+                    command.Attachment.FileName == "hello.txt" &&
+                    command.Attachment.ContentType == "text/plain" &&
+                    command.Attachment.Length == 5),
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Result.Success(commentId));
+
+        var result = await CommentsEndpoints.CreateReply(
+            parentId,
             request,
             sender.Object,
             CancellationToken.None);
