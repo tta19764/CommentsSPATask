@@ -2,6 +2,9 @@ using CommentsSPATask.Api.Endpoints;
 using CommentsSPATask.Api.Extensions;
 using CommentsSPATask.Application;
 using CommentsSPATask.Infrastructure;
+using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Http;
+using Microsoft.Extensions.Hosting;
 using Serilog;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -27,6 +30,9 @@ if (app.Environment.IsDevelopment())
 app.ApplyMigrations();
 
 app.UseHttpsRedirection();
+
+app.UseCors("Client");
+
 app.UseUploadedFiles();
 
 app.UseRequestContextLogging();

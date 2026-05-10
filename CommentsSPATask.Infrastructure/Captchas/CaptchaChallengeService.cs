@@ -12,6 +12,13 @@ namespace CommentsSPATask.Infrastructure.Captchas;
 internal sealed class CaptchaChallengeService : ICaptchaChallengeService
 {
     private const string AllowedCharacters = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+    private static readonly string[] PreferredFontFamilies =
+    [
+        "DejaVu Sans",
+        "Liberation Sans",
+        "Arial",
+        "Sans Serif"
+    ];
 
     public string GenerateCode(int length)
     {
@@ -44,7 +51,7 @@ internal sealed class CaptchaChallengeService : ICaptchaChallengeService
     public byte[] RenderImage(string code)
     {
         using var image = new Image<Rgba32>(160, 60, Color.White);
-        var font = SystemFonts.CreateFont("Arial", 24, FontStyle.Bold);
+        var font = CreateCaptchaFont();
         var random = Random.Shared;
 
         image.Mutate(context =>
@@ -72,4 +79,28 @@ internal sealed class CaptchaChallengeService : ICaptchaChallengeService
     }
 
     private static string Normalize(string value) => value.Trim().ToUpperInvariant();
+
+    private static Font CreateCaptchaFont()
+    {
+        foreach (var familyName in PreferredFontFamilies)
+        {
+            try
+            {
+                return SystemFonts.CreateFont(familyName, 24, FontStyle.Bold);
+            }
+            catch (FontFamilyNotFoundException)
+            {
+                // Try the next installed family.
+            }
+        }
+
+        if (!SystemFonts.Collection.Families.Any())
+        {
+            throw new InvalidOperationException("No system fonts are available for captcha rendering.");
+        }
+
+        var fallbackFamily = SystemFonts.Collection.Families.First();
+
+        return fallbackFamily.CreateFont(24, FontStyle.Bold);
+    }
 }
