@@ -10,6 +10,7 @@ namespace CommentsSPATask.Application.Captchas.Commands.CreateCaptcha;
 public sealed class CreateCaptchaCommandHandler(
     ICaptchaRepository captchaRepository,
     ICaptchaChallengeService captchaChallengeService,
+    ICaptchaImageStore captchaImageStore,
     IDateTimeProvider dateTimeProvider,
     IUnitOfWork unitOfWork,
     ILogger<CreateCaptchaCommandHandler> logger)
@@ -33,9 +34,10 @@ public sealed class CreateCaptchaCommandHandler(
         await unitOfWork.SaveChangesAsync(cancellationToken);
         logger.LogInformation("Captcha {CaptchaId} was persisted successfully", captcha.Id);
 
-        var imageBase64 = Convert.ToBase64String(captchaChallengeService.RenderImage(code));
+        var imageBytes = captchaChallengeService.RenderImage(code);
+        await captchaImageStore.StoreAsync(captcha.Id, imageBytes, expiresAtUtc, cancellationToken);
         logger.LogInformation("Captcha {CaptchaId} image was rendered", captcha.Id);
 
-        return Result.Success(new CreateCaptchaResponse(captcha.Id, imageBase64, expiresAtUtc));
+        return Result.Success(new CreateCaptchaResponse(captcha.Id, expiresAtUtc));
     }
 }
