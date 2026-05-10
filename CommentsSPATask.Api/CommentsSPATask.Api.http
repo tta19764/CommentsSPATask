@@ -1,0 +1,6 @@
+@CommentsSPATask.Api_HostAddress = http://localhost:5125
+
+GET {{CommentsSPATask.Api_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
