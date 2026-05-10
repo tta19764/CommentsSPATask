@@ -1,26 +1,16 @@
-﻿using CommentsSPATask.Application.Abstractions.Clock;
-using CommentsSPATask.Application.Abstractions.Data;
-using CommentsSPATask.Application.Exceptions;
+﻿using CommentsSPATask.Application.Abstractions.Data;
 using CommentsSPATask.Domain.Abstractions;
 using CommentsSPATask.Domain.Attachments;
 using CommentsSPATask.Domain.Captchas;
 using CommentsSPATask.Domain.Comments;
-using CommentsSPATask.Infrastructure.Outbox;
+using MediatR;
 using Microsoft.EntityFrameworkCore;
-using Newtonsoft.Json;
 
 namespace CommentsSPATask.Infrastructure;
 
-public sealed class ApplicationDbContext(DbContextOptions options, IDateTimeProvider dateTimeProvider)
+public sealed class ApplicationDbContext(DbContextOptions options, IPublisher publisher)
     : DbContext(options), IUnitOfWork, IApplicationDbContext
 {
-    private static readonly JsonSerializerSettings JsonSerializerSettings = new()
-    {
-        TypeNameHandling = TypeNameHandling.All
-    };
-    
-    private readonly IDateTimeProvider _dateTimeProvider = dateTimeProvider;
-
     public DbSet<Comment> Comments { get; private set; }
     
     public DbSet<Attachment> Attachments { get; private set; }
@@ -36,33 +26,31 @@ public sealed class ApplicationDbContext(DbContextOptions options, IDateTimeProv
     
     public override async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
     {
-        AddDomainEventsAsOutboxMessages();
+        var result = await base.SaveChangesAsync(cancellationToken);
 
-        int result = await base.SaveChangesAsync(cancellationToken);
+        await PublishDomainEventsAsync();
 
         return result;
     }
     
-    private void AddDomainEventsAsOutboxMessages()
+    private async Task PublishDomainEventsAsync()
     {
-        var outboxMessages = ChangeTracker
+        var domainEvents = ChangeTracker
             .Entries<Entity>()
             .Select(entry => entry.Entity)
             .SelectMany(entity =>
             {
-                IReadOnlyList<IDomainEvent> domainEvents = entity.GetDomainEvents();
+                var domainEvents = entity.GetDomainEvents();
 
                 entity.ClearDomainEvents();
 
                 return domainEvents;
             })
-            .Select(domainEvent => new OutboxMessage(
-                Guid.NewGuid(),
-                _dateTimeProvider.UtcNow,
-                domainEvent.GetType().Name,
-                JsonConvert.SerializeObject(domainEvent, JsonSerializerSettings)))
             .ToList();
 
-        AddRange(outboxMessages);
+        foreach (var domainEvent in domainEvents)
+        {
+            await publisher.Publish(domainEvent);
+        }
     }
 }

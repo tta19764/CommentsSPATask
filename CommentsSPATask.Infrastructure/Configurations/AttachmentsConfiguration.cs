@@ -1,4 +1,5 @@
 ﻿using CommentsSPATask.Domain.Attachments;
+using CommentsSPATask.Domain.Comments;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
@@ -12,8 +13,8 @@ public sealed class AttachmentsConfiguration : IEntityTypeConfiguration<Attachme
         
         builder.HasKey(attachment => attachment.Id);
         
-        builder.HasMany<Attachment>()
-            .WithOne()
+        builder.HasOne<Comment>()
+            .WithMany()
             .HasForeignKey(attachment => attachment.CommentId)
             .OnDelete(DeleteBehavior.Cascade);
         

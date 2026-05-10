@@ -19,14 +19,6 @@ public sealed class GetCommentThreadQueryHandler(
         var rootComment = await context.Comments
             .AsNoTracking()
             .Where(comment => comment.Id == request.CommentId)
-            .Select(comment => new CommentThreadRow(
-                comment.Id,
-                comment.ParentId,
-                comment.UserName.Value,
-                comment.Email.Value,
-                comment.HomePage != null ? comment.HomePage.Value : null,
-                comment.Text.Value,
-                comment.CreatedAtUtc))
             .SingleOrDefaultAsync(cancellationToken);
 
         if (rootComment is null)
@@ -37,14 +29,6 @@ public sealed class GetCommentThreadQueryHandler(
         var allComments = await context.Comments
             .AsNoTracking()
             .Where(comment => comment.Id == request.CommentId || comment.ParentId != null)
-            .Select(comment => new CommentThreadRow(
-                comment.Id,
-                comment.ParentId,
-                comment.UserName.Value,
-                comment.Email.Value,
-                comment.HomePage != null ? comment.HomePage.Value : null,
-                comment.Text.Value,
-                comment.CreatedAtUtc))
             .ToListAsync(cancellationToken);
 
         var attachments = new Dictionary<Guid, IReadOnlyCollection<CommentAttachmentResponse>>(allComments.Count);
@@ -74,8 +58,8 @@ public sealed class GetCommentThreadQueryHandler(
 
     private static CommentThreadResponse MapThread(
         Guid commentId,
-        IReadOnlyDictionary<Guid, CommentThreadRow> commentById,
-        ILookup<Guid?, CommentThreadRow> lookup,
+        IReadOnlyDictionary<Guid, Comment> commentById,
+        ILookup<Guid?, Comment> lookup,
         IReadOnlyDictionary<Guid, IReadOnlyCollection<CommentAttachmentResponse>> attachments)
     {
         var comment = commentById[commentId];
@@ -88,23 +72,14 @@ public sealed class GetCommentThreadQueryHandler(
         return new CommentThreadResponse(
             comment.Id,
             comment.ParentId,
-            comment.UserName,
-            comment.Email,
-            comment.HomePage,
-            comment.Text,
+            comment.UserName.Value,
+            comment.Email.Value,
+            comment.HomePage?.Value,
+            comment.Text.Value,
             comment.CreatedAtUtc,
             attachments.TryGetValue(comment.Id, out var commentAttachments)
                 ? commentAttachments
                 : [],
             replies);
     }
-
-    private sealed record CommentThreadRow(
-        Guid Id,
-        Guid? ParentId,
-        string UserName,
-        string Email,
-        string? HomePage,
-        string Text,
-        DateTime CreatedAtUtc);
 }

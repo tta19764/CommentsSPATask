@@ -36,13 +36,6 @@ public sealed class GetCommentsPageQueryHandler(
         var comments = await rootComments
             .Skip(request.PageSize * (request.Page - 1))
             .Take(request.PageSize)
-            .Select(comment => new CommentSummaryRow(
-                comment.Id,
-                comment.UserName.Value,
-                comment.Email.Value,
-                comment.HomePage != null ? comment.HomePage.Value : null,
-                comment.Text.Value,
-                comment.CreatedAtUtc))
             .ToListAsync(cancellationToken);
         
         var attachments = new Dictionary<Guid, IReadOnlyCollection<CommentAttachmentResponse>>(comments.Count);
@@ -63,10 +56,10 @@ public sealed class GetCommentsPageQueryHandler(
         var items = comments
             .Select(comment => new CommentSummaryResponse(
                 comment.Id,
-                comment.UserName,
-                comment.Email,
-                comment.HomePage,
-                comment.Text,
+                comment.UserName.Value,
+                comment.Email.Value,
+                comment.HomePage?.Value,
+                comment.Text.Value,
                 comment.CreatedAtUtc,
                 attachments.TryGetValue(comment.Id, out var commentAttachments)
                     ? commentAttachments
@@ -91,24 +84,16 @@ public sealed class GetCommentsPageQueryHandler(
             ? request.SortField switch
             {
                 CommentSortField.CreatedAtUtc => comments.OrderBy(comment => comment.CreatedAtUtc),
-                CommentSortField.UserName => comments.OrderBy(comment => comment.UserName.Value),
-                CommentSortField.Email => comments.OrderBy(comment => comment.Email.Value),
+                CommentSortField.UserName => comments.OrderBy(comment => comment.UserName),
+                CommentSortField.Email => comments.OrderBy(comment => comment.Email),
                 _ => comments.OrderBy(comment => comment.CreatedAtUtc)
             }
             : request.SortField switch
             {
                 CommentSortField.CreatedAtUtc => comments.OrderByDescending(comment => comment.CreatedAtUtc),
-                CommentSortField.UserName => comments.OrderByDescending(comment => comment.UserName.Value),
-                CommentSortField.Email => comments.OrderByDescending(comment => comment.Email.Value),
+                CommentSortField.UserName => comments.OrderByDescending(comment => comment.UserName),
+                CommentSortField.Email => comments.OrderByDescending(comment => comment.Email),
                 _ => comments.OrderByDescending(comment => comment.CreatedAtUtc)
             };
     }
-
-    private sealed record CommentSummaryRow(
-        Guid Id,
-        string UserName,
-        string Email,
-        string? HomePage,
-        string Text,
-        DateTime CreatedAtUtc);
 }

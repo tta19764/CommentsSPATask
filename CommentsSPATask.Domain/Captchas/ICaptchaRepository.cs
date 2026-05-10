@@ -6,5 +6,7 @@ public interface ICaptchaRepository
 
     Task<Captcha?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default);
 
+    Task<int> RemoveExpiredCaptchasAsync(DateTime cutoffUtc, CancellationToken cancellationToken = default);
+
     void Remove(Captcha captcha);
 }
