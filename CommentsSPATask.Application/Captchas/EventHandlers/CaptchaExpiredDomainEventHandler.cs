@@ -1,4 +1,4 @@
-using CommentsSPATask.Application.Abstractions.Clock;
+using CommentsSPATask.Application.Abstractions.Captcha;
 using CommentsSPATask.Domain.Abstractions;
 using CommentsSPATask.Domain.Captchas;
 using CommentsSPATask.Domain.Captchas.Events;
@@ -8,7 +8,7 @@ namespace CommentsSPATask.Application.Captchas.EventHandlers;
 
 public sealed class CaptchaExpiredDomainEventHandler(
     ICaptchaRepository captchaRepository,
-    IDateTimeProvider dateTimeProvider,
+    ICaptchaImageStore captchaImageStore,
     IUnitOfWork unitOfWork) : INotificationHandler<CaptchaExpiredDomainEvent>
 {
     public async Task Handle(CaptchaExpiredDomainEvent notification, CancellationToken cancellationToken)
@@ -21,15 +21,7 @@ public sealed class CaptchaExpiredDomainEventHandler(
         }
 
         captchaRepository.Remove(captcha);
+        await captchaImageStore.RemoveAsync(notification.CaptchaId, cancellationToken);
         await unitOfWork.SaveChangesAsync(cancellationToken);
-
-        var removedCount = await captchaRepository.RemoveExpiredCaptchasAsync(
-            dateTimeProvider.UtcNow.Subtract(TimeSpan.FromMinutes(30)),
-            cancellationToken);
-
-        if (removedCount > 0)
-        {
-            await unitOfWork.SaveChangesAsync(cancellationToken);
-        }
     }
 }

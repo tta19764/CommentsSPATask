@@ -10,15 +10,13 @@ public sealed class Captcha : Entity
         CodeHash codeHash,
         DateTime createdAtUtc,
         DateTime expiresAtUtc,
-        IsUsed isUsed,
-        FailedAttemptsCount failedAttemptsCount) 
+        IsUsed isUsed)
         : base(id)
     {
         CodeHash = codeHash;
         CreatedAtUtc = createdAtUtc;
         ExpiresAtUtc = expiresAtUtc;
         IsUsed = isUsed;
-        FailedAttemptsCount = failedAttemptsCount;
     }
 
     public CodeHash CodeHash { get; private set; }
@@ -28,8 +26,6 @@ public sealed class Captcha : Entity
     public DateTime ExpiresAtUtc { get; private set; }
 
     public IsUsed IsUsed { get; private set; }
-
-    public FailedAttemptsCount FailedAttemptsCount { get; private set; }
 
     public static Captcha Create(
         CodeHash codeHash,
@@ -41,35 +37,17 @@ public sealed class Captcha : Entity
             codeHash,
             createdAtUtc,
             expiresAtUtc,
-            new IsUsed(), 
-            new FailedAttemptsCount());
+            new IsUsed());
         
         return captcha;
     }
 
     public bool IsExpired(DateTime utcNow) => utcNow >= ExpiresAtUtc;
 
-    public bool IsBlocked() => FailedAttemptsCount.IsMaxReached();
-
-    public bool CanBeValidated(DateTime utcNow) =>
-        !IsUsed.Value &&
-        !IsExpired(utcNow) &&
-        !IsBlocked();
-
     public void MarkAsUsed()
     {
         IsUsed.SetUsed();
         RaiseDomainEvent(new CaptchaUsedDomainEvent(Id));
-    }
-
-    public void RegisterFailedAttempt()
-    {
-        FailedAttemptsCount.Increment();
-
-        if (IsBlocked())
-        {
-            RaiseDomainEvent(new CaptchaBlockedDomainEvent(Id));
-        }
     }
 
     public bool MarkAsExpiredIfNeeded(DateTime utcNow)

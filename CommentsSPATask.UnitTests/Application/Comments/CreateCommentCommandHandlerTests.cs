@@ -19,6 +19,7 @@ public sealed class CreateCommentCommandHandlerTests
     {
         var commentRepository = new Mock<ICommentRepository>();
         var captchaRepository = new Mock<ICaptchaRepository>();
+        var captchaImageStore = new Mock<ICaptchaImageStore>();
         var attachmentRepository = new Mock<IAttachmentRepository>();
         var attachmentProcessor = new Mock<IAttachmentProcessor>();
         var commentHtmlPolicy = new Mock<ICommentHtmlPolicy>();
@@ -33,6 +34,7 @@ public sealed class CreateCommentCommandHandlerTests
         var handler = new CreateCommentCommandHandler(
             commentRepository.Object,
             captchaRepository.Object,
+            captchaImageStore.Object,
             attachmentRepository.Object,
             attachmentProcessor.Object,
             commentHtmlPolicy.Object,
@@ -54,6 +56,7 @@ public sealed class CreateCommentCommandHandlerTests
     {
         var commentRepository = new Mock<ICommentRepository>();
         var captchaRepository = new Mock<ICaptchaRepository>();
+        var captchaImageStore = new Mock<ICaptchaImageStore>();
         var attachmentRepository = new Mock<IAttachmentRepository>();
         var attachmentProcessor = new Mock<IAttachmentProcessor>();
         var commentHtmlPolicy = new Mock<ICommentHtmlPolicy>();
@@ -71,6 +74,7 @@ public sealed class CreateCommentCommandHandlerTests
         var handler = new CreateCommentCommandHandler(
             commentRepository.Object,
             captchaRepository.Object,
+            captchaImageStore.Object,
             attachmentRepository.Object,
             attachmentProcessor.Object,
             commentHtmlPolicy.Object,
@@ -85,6 +89,8 @@ public sealed class CreateCommentCommandHandlerTests
 
         Assert.True(result.IsFailure);
         Assert.Equal(CaptchaErrors.InvalidInput, result.Error);
+        captchaRepository.Verify(x => x.Remove(captcha), Times.Once);
+        captchaImageStore.Verify(x => x.RemoveAsync(captcha.Id, It.IsAny<CancellationToken>()), Times.Once);
         unitOfWork.Verify(x => x.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Once);
     }
 
@@ -93,6 +99,7 @@ public sealed class CreateCommentCommandHandlerTests
     {
         var commentRepository = new Mock<ICommentRepository>();
         var captchaRepository = new Mock<ICaptchaRepository>();
+        var captchaImageStore = new Mock<ICaptchaImageStore>();
         var attachmentRepository = new Mock<IAttachmentRepository>();
         var attachmentProcessor = new Mock<IAttachmentProcessor>();
         var commentHtmlPolicy = new Mock<ICommentHtmlPolicy>();
@@ -112,6 +119,7 @@ public sealed class CreateCommentCommandHandlerTests
         var handler = new CreateCommentCommandHandler(
             commentRepository.Object,
             captchaRepository.Object,
+            captchaImageStore.Object,
             attachmentRepository.Object,
             attachmentProcessor.Object,
             commentHtmlPolicy.Object,

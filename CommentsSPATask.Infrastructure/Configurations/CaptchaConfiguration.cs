@@ -27,9 +27,5 @@ public sealed class CaptchaConfiguration : IEntityTypeConfiguration<Captcha>
         
         builder.Property(captcha => captcha.ExpiresAtUtc)
             .IsRequired();
-        
-        builder.Property(captcha => captcha.FailedAttemptsCount)
-            .IsRequired()
-            .HasConversion(failedAttemptsCount => failedAttemptsCount.Value, value => new FailedAttemptsCount(value));
     }
 }

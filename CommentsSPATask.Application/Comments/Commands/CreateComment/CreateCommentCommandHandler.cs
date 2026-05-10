@@ -14,6 +14,7 @@ namespace CommentsSPATask.Application.Comments.Commands.CreateComment;
 public sealed class CreateCommentCommandHandler(
     ICommentRepository commentRepository,
     ICaptchaRepository captchaRepository,
+    ICaptchaImageStore captchaImageStore,
     IAttachmentRepository attachmentRepository,
     IAttachmentProcessor attachmentProcessor,
     ICommentHtmlPolicy commentHtmlPolicy,
@@ -65,16 +66,11 @@ public sealed class CreateCommentCommandHandler(
             return Result.Failure<Guid>(CaptchaErrors.Expired);
         }
 
-        if (captcha.IsBlocked())
-        {
-            logger.LogWarning("Comment creation rejected because captcha {CaptchaId} is blocked", request.CaptchaId);
-            return Result.Failure<Guid>(CaptchaErrors.Blocked);
-        }
-
         if (!captchaChallengeService.VerifyCode(request.CaptchaInput, captcha.CodeHash.Value))
         {
             logger.LogWarning("Comment creation rejected because captcha {CaptchaId} input verification failed", request.CaptchaId);
-            captcha.RegisterFailedAttempt();
+            captchaRepository.Remove(captcha);
+            await captchaImageStore.RemoveAsync(captcha.Id, cancellationToken);
             await unitOfWork.SaveChangesAsync(cancellationToken);
 
             return Result.Failure<Guid>(CaptchaErrors.InvalidInput);
