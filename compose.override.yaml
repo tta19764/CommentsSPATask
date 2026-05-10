@@ -1,4 +1,8 @@
 services:
+  commentsspatask.client:
+    ports:
+      - "8080:80"
+
   commentsspatask.api:
     environment:
       ASPNETCORE_ENVIRONMENT: Development
