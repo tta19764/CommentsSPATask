@@ -1,14 +1,13 @@
 using CommentsSPATask.Application.Abstractions.Comments;
 using CommentsSPATask.Domain.Abstractions;
 using CommentsSPATask.Domain.Comments;
-using System.Xml;
-using System.Xml.Linq;
+using HtmlAgilityPack;
 
 namespace CommentsSPATask.Infrastructure.Comments;
 
 internal sealed class CommentHtmlPolicy : ICommentHtmlPolicy
 {
-    private static readonly HashSet<string> AllowedTags = new(StringComparer.Ordinal)
+    private static readonly HashSet<string> AllowedTags = new(StringComparer.OrdinalIgnoreCase)
     {
         "a",
         "code",
@@ -16,7 +15,7 @@ internal sealed class CommentHtmlPolicy : ICommentHtmlPolicy
         "strong"
     };
 
-    private static readonly HashSet<string> AllowedAnchorAttributes = new(StringComparer.Ordinal)
+    private static readonly HashSet<string> AllowedAnchorAttributes = new(StringComparer.OrdinalIgnoreCase)
     {
         "href",
         "title"
@@ -30,58 +29,84 @@ internal sealed class CommentHtmlPolicy : ICommentHtmlPolicy
         }
 
         var original = input.Trim();
-        var wrapped = $"<root>{original}</root>";
-
-        try
+        var document = new HtmlDocument
         {
-            var document = XDocument.Parse(
-                wrapped,
-                LoadOptions.PreserveWhitespace | LoadOptions.SetLineInfo);
+            OptionAutoCloseOnEnd = false,
+            OptionFixNestedTags = true
+        };
 
-            foreach (var element in document.Root!.Descendants())
+        document.LoadHtml(original);
+
+        foreach (var node in document.DocumentNode.ChildNodes)
+        {
+            if (!ValidateNode(node))
             {
-                if (!AllowedTags.Contains(element.Name.LocalName))
-                {
-                    return Result.Failure<string>(CommentErrors.InvalidHtml);
-                }
-
-                if (element.Name.LocalName == "a")
-                {
-                    foreach (var attribute in element.Attributes())
-                    {
-                        if (!AllowedAnchorAttributes.Contains(attribute.Name.LocalName))
-                        {
-                            return Result.Failure<string>(CommentErrors.InvalidHtml);
-                        }
-
-                        if (attribute.Name.LocalName == "href" &&
-                            !IsValidAnchorHref(attribute.Value))
-                        {
-                            return Result.Failure<string>(CommentErrors.InvalidHtml);
-                        }
-                    }
-                }
-                else if (element.HasAttributes)
-                {
-                    return Result.Failure<string>(CommentErrors.InvalidHtml);
-                }
+                return Result.Failure<string>(CommentErrors.InvalidHtml);
             }
         }
-        catch (XmlException)
-        {
-            return Result.Failure<string>(CommentErrors.InvalidHtml);
-        }
 
-        return Result.Success(original);
+        return Result.Success(document.DocumentNode.InnerHtml);
     }
 
-    private static bool IsValidAnchorHref(string value)
+    private static bool ValidateNode(HtmlNode node)
     {
-        if (!Uri.TryCreate(value, UriKind.Absolute, out var uri))
+        if (node.NodeType == HtmlNodeType.Text)
+        {
+            return true;
+        }
+
+        if (node.NodeType != HtmlNodeType.Element)
         {
             return false;
         }
 
-        return uri.Scheme == Uri.UriSchemeHttp || uri.Scheme == Uri.UriSchemeHttps;
+        if (!AllowedTags.Contains(node.Name))
+        {
+            return false;
+        }
+
+        if (node.Name == "a")
+        {
+            foreach (var attribute in node.Attributes)
+            {
+                if (!AllowedAnchorAttributes.Contains(attribute.Name))
+                {
+                    return false;
+                }
+
+                if (attribute.Name == "href" &&
+                    !IsValidAnchorHref(HtmlEntity.DeEntitize(attribute.Value)))
+                {
+                    return false;
+                }
+            }
+        }
+        else if (node.HasAttributes)
+        {
+            return false;
+        }
+
+        return node.ChildNodes.All(ValidateNode);
+    }
+
+    private static bool IsValidAnchorHref(string value)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+        {
+            return false;
+        }
+
+        if (!Uri.TryCreate(value, UriKind.RelativeOrAbsolute, out var uri))
+        {
+            return false;
+        }
+
+        if (uri.IsAbsoluteUri)
+        {
+            return uri.Scheme == Uri.UriSchemeHttp || uri.Scheme == Uri.UriSchemeHttps;
+        }
+
+        return !value.StartsWith("//", StringComparison.Ordinal) &&
+               !value.Contains(':', StringComparison.Ordinal);
     }
 }
