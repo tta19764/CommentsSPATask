@@ -1,1 +1,21 @@
-﻿
+services:
+  commentsspatask.api:
+    image: commentsspatask.api
+    build:
+      context: .
+      dockerfile: CommentsSPATask.Api/Dockerfile
+    environment:
+      ConnectionStrings__DefaultConnection: Server=sqlserver,1433;Database=CommentsSPATask;User Id=sa;Password=${SA_PASSWORD};TrustServerCertificate=True;
+    depends_on:
+      - sqlserver
+
+  sqlserver:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    environment:
+      ACCEPT_EULA: "Y"
+      MSSQL_SA_PASSWORD: ${SA_PASSWORD}
+    volumes:
+      - sqlserver-data:/var/opt/mssql
+
+volumes:
+  sqlserver-data:
