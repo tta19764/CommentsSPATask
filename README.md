@@ -159,6 +159,24 @@ Main endpoints:
 
 From the solution root:
 
+1. Create a local `.env` file in the repository root.
+2. Add the SQL Server password variable.
+3. Start the stack.
+
+Example `.env`:
+
+```env
+SA_PASSWORD=TestPassword123!
+```
+
+You can copy the example file:
+
+```powershell
+Copy-Item .env.example .env
+```
+
+Then run:
+
 ```powershell
 docker compose up --build
 ```
@@ -174,6 +192,22 @@ Docker persistence:
 - SQL Server data is stored in the `sqlserver-data` volume
 - uploaded attachments are stored in the `uploads-data` volume
 - rebuilding the API container does not remove persisted database rows or uploaded files stored in those volumes
+
+Notes:
+
+- `.env` is required for Docker Compose because the SQL Server password is injected into both the SQL container and the API connection string
+- the SQL password must satisfy SQL Server policy requirements:
+  - at least 8 characters
+  - uppercase letter
+  - lowercase letter
+  - number
+  - symbol
+- if you change `SA_PASSWORD` after the `sqlserver-data` volume was already created, remove existing volumes before restarting:
+
+```powershell
+docker compose down -v
+docker compose up --build
+```
 
 ### API only
 
