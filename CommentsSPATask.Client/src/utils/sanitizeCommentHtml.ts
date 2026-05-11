@@ -1,6 +1,16 @@
 const ALLOWED_TAGS = new Set(["A", "CODE", "I", "STRONG"]);
 const ALLOWED_ATTRIBUTES = new Set(["href", "title"]);
 
+export function validateCommentHtml(value: string) {
+  const template = document.createElement("template");
+  template.innerHTML = value;
+  const errors: string[] = [];
+
+  validateChildren(template.content, errors);
+
+  return errors;
+}
+
 export function sanitizeCommentHtml(value: string) {
   const template = document.createElement("template");
   template.innerHTML = value;
@@ -51,7 +61,52 @@ function sanitizeChildren(parent: ParentNode) {
   }
 }
 
+function validateChildren(parent: ParentNode, errors: string[]) {
+  for (const child of Array.from(parent.childNodes)) {
+    if (child.nodeType === Node.TEXT_NODE) {
+      continue;
+    }
+
+    if (child.nodeType !== Node.ELEMENT_NODE) {
+      errors.push("Only text and allowed HTML tags are supported.");
+      continue;
+    }
+
+    const element = child as HTMLElement;
+    const tagName = element.tagName.toLowerCase();
+
+    if (!ALLOWED_TAGS.has(element.tagName)) {
+      errors.push(`<${tagName}> is not allowed.`);
+      continue;
+    }
+
+    validateAttributes(element, errors);
+    validateChildren(element, errors);
+  }
+}
+
+function validateAttributes(element: HTMLElement, errors: string[]) {
+  const tagName = element.tagName.toLowerCase();
+
+  for (const attribute of Array.from(element.attributes)) {
+    const name = attribute.name.toLowerCase();
+
+    if (element.tagName !== "A" || !ALLOWED_ATTRIBUTES.has(name)) {
+      errors.push(`<${tagName}> cannot use "${attribute.name}".`);
+      continue;
+    }
+
+    if (name === "href" && !isSafeHref(attribute.value.trim())) {
+      errors.push("Link href must be a safe relative, http, or https URL.");
+    }
+  }
+}
+
 function isSafeHref(href: string) {
+  if (!href) {
+    return false;
+  }
+
   if (href.startsWith("//")) {
     return false;
   }

@@ -1,3 +1,9 @@
+import { useEffect, useRef } from "react";
+import {
+  sanitizeCommentHtml,
+  validateCommentHtml,
+} from "../../utils/sanitizeCommentHtml";
+
 type CommentTextEditorProps = {
   setText: (value: string | ((currentText: string) => string)) => void;
   text: string;
@@ -11,6 +17,15 @@ const allowedTags = [
 ];
 
 function CommentTextEditor({ setText, text }: CommentTextEditorProps) {
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const validationErrors = Array.from(new Set(validateCommentHtml(text)));
+  const hasValidationErrors = validationErrors.length > 0;
+  const previewHtml = sanitizeCommentHtml(text);
+
+  useEffect(() => {
+    textareaRef.current?.setCustomValidity(validationErrors.join(" "));
+  }, [validationErrors]);
+
   const insertTag = (tagValue: string) => {
     setText((currentText) => `${currentText}${tagValue}`);
   };
@@ -33,13 +48,39 @@ function CommentTextEditor({ setText, text }: CommentTextEditorProps) {
         </div>
       </div>
       <textarea
-        className="form-control"
+        aria-invalid={hasValidationErrors}
+        className={`form-control ${hasValidationErrors ? "is-invalid" : ""}`}
         id="comment-text"
         onChange={(event) => setText(event.target.value)}
+        ref={textareaRef}
         required
         rows={5}
         value={text}
       />
+      {hasValidationErrors && (
+        <div className="invalid-feedback d-block">
+          {validationErrors.join(" ")}
+        </div>
+      )}
+
+      <div className="mt-3">
+        <div className="d-flex justify-content-between align-items-center mb-1">
+          <span className="form-label mb-0">Preview</span>
+          <span className={hasValidationErrors ? "text-danger small" : "text-secondary small"}>
+            {hasValidationErrors ? "Contains invalid HTML" : "Allowed HTML only"}
+          </span>
+        </div>
+        <div className="comment-preview border rounded bg-light p-3">
+          {text.trim() ? (
+            <div
+              className="comment-text mb-0"
+              dangerouslySetInnerHTML={{ __html: previewHtml }}
+            />
+          ) : (
+            <span className="text-secondary">Message preview will appear here.</span>
+          )}
+        </div>
+      </div>
     </div>
   );
 }

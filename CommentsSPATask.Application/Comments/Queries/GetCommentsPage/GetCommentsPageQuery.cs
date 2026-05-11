@@ -10,13 +10,13 @@ public sealed record GetCommentsPageQuery(
 
 public enum SortDirection
 {
-    Desc = 1,
-    Asc = 2
+    Asc = 1,
+    Desc = 2
 }
 
 public enum CommentSortField
 {
-    CreatedAtUtc = 1,
-    UserName = 2,
-    Email = 3
+    UserName = 1,
+    Email = 2,
+    CreatedAtUtc = 3
 }
