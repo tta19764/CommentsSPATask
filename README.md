@@ -88,8 +88,6 @@ The application currently runs a background cleanup job for expired captchas:
 - old expired captcha rows are removed periodically
 - cleanup also runs after startup
 
-Attachment validation and image resizing are not deferred to background processing. They are performed synchronously before persistence so invalid or oversized files are not saved in final form.
-
 ## Solution structure
 
 ```text
@@ -217,9 +215,30 @@ npm run build
 
 The project smoke checklist is documented in:
 
-- [SMOKE_TESTS.md](C:/Users/tta19/source/repos/CommentsSPATask/SMOKE_TESTS.md)
+- [SMOKE_TESTS.md](SMOKE_TESTS.md)
 
 It contains a checkbox table with test IDs, preconditions, execution steps, and expected results.
+
+## Schema
+
+Database schema artifacts are stored in:
+
+- [SchemeFiles](SchemeFiles)
+
+Available files:
+
+- [CommentsSPATask-schema.sql](SchemeFiles/CommentsSPATask-schema.sql)
+  - SQL Server schema script generated from Entity Framework migrations
+- [MySQLSchem.mwb](SchemeFiles/MySQLSchem.mwb)
+  - MySQL Workbench model file for visual review
+- [Scheme Image.png](SchemeFiles/SchemeImage.png)
+  - exported schema diagram image
+
+Important note:
+
+- the runtime database used by the application is SQL Server
+- the `.mwb` file is a review artifact for the task requirement
+- the `.sql` file is the authoritative schema script generated from the implemented EF Core model
 
 ## Important implementation notes
 
@@ -235,5 +254,4 @@ It contains a checkbox table with test IDs, preconditions, execution steps, and 
 - root `README.md`
 - smoke test document
 - unit tests
-
-If a database schema export for external tools such as MySQL Workbench is required for submission, it should be produced separately from the current SQL Server model.
+- database schema artifacts
