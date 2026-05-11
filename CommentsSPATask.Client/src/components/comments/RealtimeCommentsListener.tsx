@@ -2,8 +2,11 @@ import { HubConnectionBuilder, HubConnectionState, LogLevel } from "@microsoft/s
 import { useEffect } from "react";
 import { useDispatch } from "react-redux";
 import { commentsApi } from "../../api/commentsApi";
-import { buildApiUrl } from "../../utils/apiUrl";
-const HUB_URL = buildApiUrl(import.meta.env.VITE_APP_HUB_ENDPOINT.trim() || "hubs/comments");
+import { buildApiUrl, getApiPath } from "../../utils/apiUrl";
+
+const HUB_URL = buildApiUrl(
+  getApiPath("VITE_APP_HUB_ENDPOINT", import.meta.env.VITE_APP_HUB_ENDPOINT)
+);
 
 function RealtimeCommentsListener() {
   const dispatch = useDispatch();
