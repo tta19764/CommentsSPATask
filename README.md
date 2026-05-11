@@ -175,6 +175,14 @@ You can copy the example file:
 Copy-Item .env.example .env
 ```
 
+```cmd
+copy .env.example .env
+```
+
+```bash
+cp .env.example .env
+```
+
 Then run:
 
 ```powershell
