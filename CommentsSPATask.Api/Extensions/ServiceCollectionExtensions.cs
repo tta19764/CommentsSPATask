@@ -1,9 +1,9 @@
 using CommentsSPATask.Api.Captchas;
+using CommentsSPATask.Api.BackgroundJobs;
 using CommentsSPATask.Api.Realtime;
 using CommentsSPATask.Application.Abstractions.Captcha;
 using CommentsSPATask.Application.Abstractions.Realtime;
 using System.Text.Json.Serialization;
-using Microsoft.Extensions.DependencyInjection;
 
 namespace CommentsSPATask.Api.Extensions;
 
@@ -35,6 +35,7 @@ public static class ServiceCollectionExtensions
         services.AddMemoryCache();
         services.AddSignalR();
         services.AddSingleton<ICaptchaImageStore, InMemoryCaptchaImageStore>();
+        services.AddHostedService<ExpiredCaptchaCleanupService>();
         services.AddSingleton<ICommentsRealtimeNotifier, SignalRCommentsRealtimeNotifier>();
         services.AddSwaggerGen();
 
