@@ -74,6 +74,13 @@ function CommentsPage() {
     setSearchParams(nextParams);
   };
 
+  const getPageUrl = (nextPage: number) => {
+    const nextParams = new URLSearchParams(searchParams);
+    nextParams.set("page", String(nextPage));
+
+    return `/?${nextParams.toString()}`;
+  };
+
   const changeSort = (nextSortField: CommentSortFieldValue) => {
     const nextDirection =
       sortField === nextSortField && sortDirection === SortDirection.Desc
@@ -131,8 +138,8 @@ function CommentsPage() {
 
       <CommentsPagination
         currentPage={page}
+        getPageUrl={getPageUrl}
         totalPages={totalPages}
-        onPageChange={(nextPage) => updateSearch({ page: nextPage })}
       />
 
       {previewAttachment && (

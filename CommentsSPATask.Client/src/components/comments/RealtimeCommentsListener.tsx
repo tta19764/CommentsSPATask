@@ -3,8 +3,7 @@ import { useEffect } from "react";
 import { useDispatch } from "react-redux";
 import { commentsApi } from "../../api/commentsApi";
 import { buildApiUrl } from "../../utils/apiUrl";
-
-const HUB_URL = buildApiUrl("hubs/comments");
+const HUB_URL = buildApiUrl(import.meta.env.VITE_APP_HUB_ENDPOINT.trim() || "hubs/comments");
 
 function RealtimeCommentsListener() {
   const dispatch = useDispatch();

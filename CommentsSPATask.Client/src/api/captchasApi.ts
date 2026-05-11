@@ -26,21 +26,9 @@ export const captchaApi = createApi({
                 method: "POST",
             }),
         }),
-
-        getCaptchaImage: builder.query<
-            Blob,
-            string
-        >({
-            query: (captchaId) => ({
-                url: `${CAPTCHAS_ENDPOINT}/${captchaId}/image`,
-                responseHandler: (response) =>
-                    response.blob(),
-            }),
-        }),
     }),
 });
 
 export const {
     useCreateCaptchaMutation,
-    useGetCaptchaImageQuery,
 } = captchaApi;

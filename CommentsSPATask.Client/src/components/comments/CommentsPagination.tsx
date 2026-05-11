@@ -1,13 +1,15 @@
+import { Link } from "react-router-dom";
+
 type CommentsPaginationProps = {
   currentPage: number;
   totalPages: number;
-  onPageChange: (page: number) => void;
+  getPageUrl: (page: number) => string;
 };
 
 function CommentsPagination({
   currentPage,
   totalPages,
-  onPageChange,
+  getPageUrl,
 }: CommentsPaginationProps) {
   const pages = Array.from({ length: totalPages }, (_, index) => index + 1)
     .filter((page) => {
@@ -21,15 +23,14 @@ function CommentsPagination({
   return (
     <nav aria-label="Comments pagination" className="mt-4">
       <ul className="pagination justify-content-center flex-wrap gap-1">
-        <li className="page-item">
-          <button
-            className="page-link"
-            disabled={currentPage <= 1}
-            onClick={() => onPageChange(currentPage - 1)}
-            type="button"
-          >
-            Previous
-          </button>
+        <li className={`page-item ${currentPage <= 1 ? "disabled" : ""}`}>
+          {currentPage <= 1 ? (
+            <span className="page-link">Previous</span>
+          ) : (
+            <Link className="page-link" to={getPageUrl(currentPage - 1)}>
+              Previous
+            </Link>
+          )}
         </li>
 
         {pages.map((page, index) => {
@@ -39,26 +40,24 @@ function CommentsPagination({
           return (
             <li className="page-item d-flex align-items-center" key={page}>
               {needsGap && <span className="px-2 text-secondary">...</span>}
-              <button
+              <Link
                 className={`page-link ${page === currentPage ? "active" : ""}`}
-                onClick={() => onPageChange(page)}
-                type="button"
+                to={getPageUrl(page)}
               >
                 {page}
-              </button>
+              </Link>
             </li>
           );
         })}
 
-        <li className="page-item">
-          <button
-            className="page-link"
-            disabled={currentPage >= totalPages}
-            onClick={() => onPageChange(currentPage + 1)}
-            type="button"
-          >
-            Next
-          </button>
+        <li className={`page-item ${currentPage >= totalPages ? "disabled" : ""}`}>
+          {currentPage >= totalPages ? (
+            <span className="page-link">Next</span>
+          ) : (
+            <Link className="page-link" to={getPageUrl(currentPage + 1)}>
+              Next
+            </Link>
+          )}
         </li>
       </ul>
     </nav>
