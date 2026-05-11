@@ -169,6 +169,12 @@ Default ports:
 - API: `http://localhost:8081`
 - SQL Server: `localhost:1433`
 
+Docker persistence:
+
+- SQL Server data is stored in the `sqlserver-data` volume
+- uploaded attachments are stored in the `uploads-data` volume
+- rebuilding the API container does not remove persisted database rows or uploaded files stored in those volumes
+
 ### API only
 
 ```powershell

@@ -21,6 +21,8 @@ services:
     depends_on:
       sqlserver:
         condition: service_healthy
+    volumes:
+      - uploads-data:/app/uploads
 
   sqlserver:
     image: mcr.microsoft.com/mssql/server:2022-latest
@@ -40,3 +42,4 @@ services:
 
 volumes:
   sqlserver-data:
+  uploads-data:
