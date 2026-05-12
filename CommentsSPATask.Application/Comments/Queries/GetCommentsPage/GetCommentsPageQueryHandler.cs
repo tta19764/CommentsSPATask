@@ -1,8 +1,8 @@
 using CommentsSPATask.Application.Abstractions.Data;
 using CommentsSPATask.Application.Abstractions.Messaging;
-using CommentsSPATask.Application.Comments.Queries;
 using CommentsSPATask.Domain.Abstractions;
 using CommentsSPATask.Domain.Attachments;
+using CommentsSPATask.Domain.Comments;
 using Microsoft.Extensions.Logging;
 using Microsoft.EntityFrameworkCore;
 
@@ -84,15 +84,19 @@ public sealed class GetCommentsPageQueryHandler(
             ? request.SortField switch
             {
                 CommentSortField.CreatedAtUtc => comments.OrderBy(comment => comment.CreatedAtUtc),
-                CommentSortField.UserName => comments.OrderBy(comment => comment.UserName),
-                CommentSortField.Email => comments.OrderBy(comment => comment.Email),
+                CommentSortField.UserName => comments.OrderBy(comment =>
+                    EF.Property<string>(comment, nameof(comment.UserName)).ToLower()),
+                CommentSortField.Email => comments.OrderBy(comment =>
+                    EF.Property<string>(comment, nameof(comment.Email)).ToLower()),
                 _ => comments.OrderBy(comment => comment.CreatedAtUtc)
             }
             : request.SortField switch
             {
                 CommentSortField.CreatedAtUtc => comments.OrderByDescending(comment => comment.CreatedAtUtc),
-                CommentSortField.UserName => comments.OrderByDescending(comment => comment.UserName),
-                CommentSortField.Email => comments.OrderByDescending(comment => comment.Email),
+                CommentSortField.UserName => comments.OrderByDescending(comment =>
+                    EF.Property<string>(comment, nameof(comment.UserName)).ToLower()),
+                CommentSortField.Email => comments.OrderByDescending(comment =>
+                    EF.Property<string>(comment, nameof(comment.Email)).ToLower()),
                 _ => comments.OrderByDescending(comment => comment.CreatedAtUtc)
             };
     }
