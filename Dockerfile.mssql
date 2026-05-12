@@ -6,9 +6,20 @@ ENV ACCEPT_EULA=Y
 ENV MSSQL_PID=Express
 ENV MSSQL_MEMORY_LIMIT_MB=1024
 ENV HOME=/var/opt/mssql
+ENV MSSQL_DUMP_DIR=/tmp
+ENV MSSQL_ENABLE_HADR=0
+ENV MSSQL_AGENT_ENABLED=false
 
-RUN mkdir -p /var/opt/mssql /.system \
-    && chmod -R 777 /var/opt/mssql /.system
+RUN mkdir -p /var/opt/mssql/data \
+    /var/opt/mssql/log \
+    /var/opt/mssql/secrets \
+    /var/opt/mssql/.system \
+    /tmp/mssql-dumps \
+    /.system \
+    && chown -R 10001:0 /var/opt/mssql /tmp/mssql-dumps /.system \
+    && chmod -R 775 /var/opt/mssql /tmp/mssql-dumps /.system
+
+USER 10001
 
 WORKDIR /var/opt/mssql
 
