@@ -4,7 +4,7 @@ const ALLOWED_ATTRIBUTES = new Set(["href", "title"]);
 export function validateCommentHtml(value: string) {
   const template = document.createElement("template");
   template.innerHTML = value;
-  const errors: string[] = [];
+  const errors = validateClosingTags(value);
 
   validateChildren(template.content, errors);
 
@@ -82,7 +82,49 @@ function validateChildren(parent: ParentNode, errors: string[]) {
 
     validateAttributes(element, errors);
     validateChildren(element, errors);
+
+    if (!element.textContent?.trim()) {
+      errors.push(`<${tagName}> must contain text.`);
+    }
   }
+}
+
+function validateClosingTags(value: string) {
+  const errors: string[] = [];
+  const stack: string[] = [];
+  const tagRegex = /<\/?([a-z][a-z0-9]*)(?:\s[^<>]*)?>/gi;
+
+  for (const match of value.matchAll(tagRegex)) {
+    const fullTag = match[0];
+    const tagName = match[1].toLowerCase();
+
+    if (!ALLOWED_TAGS.has(tagName.toUpperCase())) {
+      continue;
+    }
+
+    if (fullTag.endsWith("/>")) {
+      errors.push(`<${tagName}> must use an opening and closing tag.`);
+      continue;
+    }
+
+    if (fullTag.startsWith("</")) {
+      const expected = stack.pop();
+
+      if (expected !== tagName) {
+        errors.push(`Closing tag </${tagName}> does not match the opened tag.`);
+      }
+
+      continue;
+    }
+
+    stack.push(tagName);
+  }
+
+  for (const tagName of stack.reverse()) {
+    errors.push(`Add closing tag </${tagName}>.`);
+  }
+
+  return errors;
 }
 
 function validateAttributes(element: HTMLElement, errors: string[]) {
