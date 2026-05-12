@@ -23,8 +23,12 @@ function CommentTextEditor({ setText, text }: CommentTextEditorProps) {
   const previewHtml = sanitizeCommentHtml(text);
 
   useEffect(() => {
-    textareaRef.current?.setCustomValidity(validationErrors.join(" "));
-  }, [validationErrors]);
+    const htmlMessage = validationErrors.join(" ");
+    const lengthMessage =
+      text.length > 2500 ? "Comment text must be 2500 characters or fewer." : "";
+
+    textareaRef.current?.setCustomValidity(htmlMessage || lengthMessage);
+  }, [text, validationErrors]);
 
   const insertTag = (tagValue: string) => {
     setText((currentText) => `${currentText}${tagValue}`);
@@ -49,14 +53,20 @@ function CommentTextEditor({ setText, text }: CommentTextEditorProps) {
       </div>
       <textarea
         aria-invalid={hasValidationErrors}
+        aria-describedby="comment-text-help"
         className={`form-control ${hasValidationErrors ? "is-invalid" : ""}`}
         id="comment-text"
+        maxLength={2500}
         onChange={(event) => setText(event.target.value)}
         ref={textareaRef}
         required
         rows={5}
         value={text}
       />
+      <div className="form-text" id="comment-text-help">
+        Required. Up to 2500 characters. Only [a], [code], [i], and [strong]
+        HTML tags are allowed.
+      </div>
       {hasValidationErrors && (
         <div className="invalid-feedback d-block">
           {validationErrors.join(" ")}

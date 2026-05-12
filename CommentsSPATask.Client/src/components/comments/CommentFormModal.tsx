@@ -19,10 +19,6 @@ function CommentFormModal({ parentId, title, onClose }: CommentFormModalProps) {
       <div
         aria-modal="true"
         className="modal fade show d-block"
-        onClick={(event) => {
-          event.stopPropagation();
-          onClose();
-        }}
         role="dialog"
         tabIndex={-1}
       >
@@ -75,7 +71,6 @@ function CommentFormModal({ parentId, title, onClose }: CommentFormModalProps) {
                 form.isSubmitting || Boolean(form.attachmentError)
               }
               isSubmitting={form.isSubmitting}
-              onClose={onClose}
             />
           </form>
         </div>

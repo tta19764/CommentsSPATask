@@ -18,12 +18,19 @@ function CommentCaptchaFields({
       <div className="col-md-6">
         <label className="form-label" htmlFor="comment-captcha">CAPTCHA</label>
         <input
+          aria-describedby="comment-captcha-help"
           className="form-control"
           id="comment-captcha"
+          maxLength={10}
           onChange={(event) => setCaptchaInput(event.target.value)}
+          pattern="[A-Za-z0-9]+"
           required
+          title="Enter the letters and digits shown in the CAPTCHA image."
           value={captchaInput}
         />
+        <div className="form-text" id="comment-captcha-help">
+          Required. Enter only the Latin letters and digits shown in the image.
+        </div>
       </div>
 
       <div className="col-md-6 d-flex align-items-end gap-2">
