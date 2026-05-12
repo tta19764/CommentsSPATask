@@ -14,8 +14,6 @@ jobs:
     steps:
       - name: Deploy over SSH
         uses: appleboy/ssh-action@v1.2.0
-        env:
-          REPOSITORY_URL: ${{ vars.REPOSITORY_URL }}
         with:
           host: ${{ secrets.VM_HOST }}
           username: ${{ secrets.VM_USER }}
@@ -37,7 +35,12 @@ jobs:
             fi
 
             APP_DIR="/home/azureuser/CommentsSPATask"
-            REPO_URL="${REPOSITORY_URL:?REPOSITORY_URL variable is required}"
+            REPO_URL="${{ vars.REPOSITORY_URL }}"
+
+            if [ -z "$REPO_URL" ]; then
+              echo "REPOSITORY_URL GitHub variable is required."
+              exit 1
+            fi
 
             if [ ! -d "$APP_DIR" ]; then
               git clone "$REPO_URL" "$APP_DIR"
