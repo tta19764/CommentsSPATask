@@ -100,6 +100,7 @@ CommentsSPATask
 ├── CommentsSPATask.UnitTests
 ├── compose.yaml
 ├── compose.override.yaml
+├── compose.deploy.yaml
 ├── README.md
 └── SMOKE_TESTS.md
 ```
@@ -167,6 +168,7 @@ Example `.env`:
 
 ```env
 SA_PASSWORD=TestPassword123!
+VM_PUBLIC_IP=127.0.0.1
 ```
 
 You can copy the example file:
@@ -217,6 +219,68 @@ docker compose down -v
 docker compose up --build
 ```
 
+### Full stack on a VM/VDS
+
+The VM deployment uses the same Docker images as local development, but with a deployment override:
+
+- the frontend is built with the VM public API URL
+- the API allows the VM frontend origin through CORS
+- SQL Server is not published to the public internet
+
+Recommended VM:
+
+- Ubuntu Server 22.04 LTS x64
+- 2 vCPU minimum
+- 4 GB RAM minimum, 8 GB preferred
+- 64 GB disk
+
+Open these inbound ports in the VM firewall or cloud network security group:
+
+- `22` for SSH, preferably only from your IP
+- `8080` for the frontend
+- `8081` for the API and Swagger
+
+Do not expose SQL Server port `1433` publicly.
+
+On the VM:
+
+```bash
+git clone https://github.com/tta19764/CommentsSPATask.git
+cd CommentsSPATask
+cp .env.example .env
+```
+
+Edit `.env`:
+
+```env
+SA_PASSWORD=YourStrongPassword123!
+VM_PUBLIC_IP=<your-vm-public-ip>
+```
+
+Start the deployment:
+
+```bash
+docker compose -f compose.yaml -f compose.deploy.yaml up --build -d
+```
+
+Public URLs:
+
+- frontend: `http://<your-vm-public-ip>:8080`
+- API Swagger: `http://<your-vm-public-ip>:8081/swagger`
+
+Update an existing VM deployment after pushing changes:
+
+```bash
+git pull
+docker compose -f compose.yaml -f compose.deploy.yaml up --build -d
+```
+
+Stop without deleting database or uploads:
+
+```bash
+docker compose -f compose.yaml -f compose.deploy.yaml down
+```
+
 ### API only
 
 ```powershell
@@ -243,6 +307,9 @@ npm run dev
 - API startup retries migrations on transient SQL startup errors
 - the frontend is built into a static Nginx container
 - Vite environment variables are passed through Docker build arguments
+- local Docker Compose uses `compose.override.yaml` automatically
+- VM deployment should use `compose.yaml` plus `compose.deploy.yaml`
+- additional frontend origins can be passed to the API through `Cors__AllowedOrigins__0`, `Cors__AllowedOrigins__1`, and so on
 
 ## Testing
 
