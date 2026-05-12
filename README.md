@@ -168,7 +168,6 @@ Example `.env`:
 
 ```env
 SA_PASSWORD=TestPassword123!
-VM_PUBLIC_IP=127.0.0.1
 ```
 
 You can copy the example file:
@@ -221,64 +220,23 @@ docker compose up --build
 
 ### Full stack on a VM/VDS
 
-The VM deployment uses the same Docker images as local development, but with a deployment override:
+The project can be deployed to a Linux VM/VDS with Docker Compose. This is the intended hosted deployment mode for keeping SQL Server as the runtime database.
+
+The VM deployment uses the same Docker images as local development, with `compose.deploy.yaml` applying deployment-specific settings:
 
 - the frontend is built with the VM public API URL
-- the API allows the VM frontend origin through CORS
+- the API receives the VM frontend origin through `Cors__AllowedOrigins__0`
 - SQL Server is not published to the public internet
+- uploaded files and SQL Server data are persisted through Docker volumes
 
-Recommended VM:
+Deployment is automated by the GitHub Actions workflow:
 
-- Ubuntu Server 22.04 LTS x64
-- 2 vCPU minimum
-- 4 GB RAM minimum, 8 GB preferred
-- 64 GB disk
+- `.github/workflows/deploy-vm.yml`
 
-Open these inbound ports in the VM firewall or cloud network security group:
-
-- `22` for SSH, preferably only from your IP
-- `8080` for the frontend
-- `8081` for the API and Swagger
-
-Do not expose SQL Server port `1433` publicly.
-
-On the VM:
+On push to `main`, the workflow connects to the VM over SSH, clones or updates the repository, writes the deployment `.env` file, and runs:
 
 ```bash
-git clone https://github.com/tta19764/CommentsSPATask.git
-cd CommentsSPATask
-cp .env.example .env
-```
-
-Edit `.env`:
-
-```env
-SA_PASSWORD=YourStrongPassword123!
-VM_PUBLIC_IP=<your-vm-public-ip>
-```
-
-Start the deployment:
-
-```bash
-docker compose -f compose.yaml -f compose.deploy.yaml up --build -d
-```
-
-Public URLs:
-
-- frontend: `http://<your-vm-public-ip>:8080`
-- API Swagger: `http://<your-vm-public-ip>:8081/swagger`
-
-Update an existing VM deployment after pushing changes:
-
-```bash
-git pull
-docker compose -f compose.yaml -f compose.deploy.yaml up --build -d
-```
-
-Stop without deleting database or uploads:
-
-```bash
-docker compose -f compose.yaml -f compose.deploy.yaml down
+sudo docker compose -f compose.yaml -f compose.deploy.yaml up --build -d
 ```
 
 ### API only
