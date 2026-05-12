@@ -7,20 +7,12 @@ ENV MSSQL_PID=Express
 ENV MSSQL_MEMORY_LIMIT_MB=1024
 ENV HOME=/var/opt/mssql
 ENV MSSQL_DUMP_DIR=/tmp
-ENV MSSQL_ENABLE_HADR=0
 ENV MSSQL_AGENT_ENABLED=false
 
-RUN mkdir -p /var/opt/mssql/data \
-    /var/opt/mssql/log \
-    /var/opt/mssql/secrets \
-    /var/opt/mssql/.system \
-    /tmp/mssql-dumps \
-    /.system \
-    && chown -R 10001:0 /var/opt/mssql /tmp/mssql-dumps /.system \
-    && chmod -R 775 /var/opt/mssql /tmp/mssql-dumps /.system
+COPY railway-mssql-entrypoint.sh /usr/local/bin/railway-mssql-entrypoint.sh
 
-USER 10001
+RUN chmod +x /usr/local/bin/railway-mssql-entrypoint.sh
 
 WORKDIR /var/opt/mssql
 
-ENTRYPOINT ["/opt/mssql/bin/sqlservr"]
+ENTRYPOINT ["/usr/local/bin/railway-mssql-entrypoint.sh"]
