@@ -53,6 +53,7 @@ jobs:
             cat > .env <<'ENVEOF'
             SA_PASSWORD=${{ secrets.SA_PASSWORD }}
             VM_PUBLIC_IP=${{ secrets.VM_HOST }}
+            SWAGGER_ENABLED=${{ vars.SWAGGER_ENABLED }}
             ENVEOF
 
             sudo docker compose -f compose.yaml -f compose.deploy.yaml up --build -d

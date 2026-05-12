@@ -239,6 +239,14 @@ On push to `main`, the workflow connects to the VM over SSH, clones or updates t
 sudo docker compose -f compose.yaml -f compose.deploy.yaml up --build -d
 ```
 
+The workflow writes these deployment values into `.env` on the VM:
+
+- `SA_PASSWORD` from the GitHub `SA_PASSWORD` secret
+- `VM_PUBLIC_IP` from the GitHub `VM_HOST` secret
+- `SWAGGER_ENABLED` from the GitHub `SWAGGER_ENABLED` variable
+
+When `SWAGGER_ENABLED=true`, Swagger is exposed in production for review at `/swagger`.
+
 ### API only
 
 ```powershell

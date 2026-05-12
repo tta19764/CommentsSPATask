@@ -21,7 +21,7 @@ builder.Services.AddInfrastructure(builder.Configuration);
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
-if (app.Environment.IsDevelopment())
+if (app.Environment.IsDevelopment() || app.Configuration.GetValue<bool>("Swagger:Enabled"))
 {
     app.UseSwaggerDocumentation();
     app.MapGet("/", () => Results.Redirect("/swagger")).ExcludeFromDescription();

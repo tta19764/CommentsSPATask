@@ -15,5 +15,6 @@ services:
       ASPNETCORE_ENVIRONMENT: Production
       ASPNETCORE_HTTP_PORTS: 8080
       Cors__AllowedOrigins__0: http://${VM_PUBLIC_IP}:8080
+      Swagger__Enabled: ${SWAGGER_ENABLED}
     ports:
       - "8081:8080"
