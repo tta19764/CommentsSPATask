@@ -154,6 +154,12 @@ Main endpoints:
 - `/hubs/comments`
   - SignalR hub
 
+## Deployed app
+
+- frontend: [http://20.52.17.70:8080/](http://20.52.17.70:8080/)
+- API: [http://20.52.17.70:8081/](http://20.52.17.70:8081/)
+- Swagger: [http://20.52.17.70:8081/swagger](http://20.52.17.70:8081/swagger)
+
 ## Running the project
 
 ### Full stack with Docker
