@@ -255,6 +255,44 @@ When `SWAGGER_ENABLED=true`, Swagger is exposed in production for review at `/sw
 
 ### API only
 
+For local API development, the API reads development settings from:
+
+```text
+CommentsSPATask.Api/appsettings.Development.json
+```
+
+The repository includes a valid local example:
+
+```text
+CommentsSPATask.Api/appsettings.Development.example.json
+```
+
+Copy it if your local development settings file is missing or needs to be reset.
+
+```powershell
+Copy-Item CommentsSPATask.Api/appsettings.Development.example.json CommentsSPATask.Api/appsettings.Development.json
+```
+
+```cmd
+copy CommentsSPATask.Api\appsettings.Development.example.json CommentsSPATask.Api\appsettings.Development.json
+```
+
+```bash
+cp CommentsSPATask.Api/appsettings.Development.example.json CommentsSPATask.Api/appsettings.Development.json
+```
+
+The default example uses SQL Server LocalDB:
+
+```json
+{
+  "ConnectionStrings": {
+    "DefaultConnection": "Server=(localdb)\\MSSQLLocalDB;Database=CommentsSPATask;Trusted_Connection=True;TrustServerCertificate=True;"
+  }
+}
+```
+
+Run the API:
+
 ```powershell
 dotnet run --project CommentsSPATask.Api
 ```
@@ -265,6 +303,42 @@ Development behavior:
 - development settings come from `appsettings.Development.json`
 
 ### Frontend only
+
+For local frontend development, Vite reads environment variables from:
+
+```text
+CommentsSPATask.Client/.env
+```
+
+The repository includes a valid local example:
+
+```text
+CommentsSPATask.Client/.env.example
+```
+
+Copy it before running the frontend directly.
+
+```powershell
+Copy-Item CommentsSPATask.Client/.env.example CommentsSPATask.Client/.env
+```
+
+```cmd
+copy CommentsSPATask.Client\.env.example CommentsSPATask.Client\.env
+```
+
+```bash
+cp CommentsSPATask.Client/.env.example CommentsSPATask.Client/.env
+```
+
+Example frontend `.env`:
+
+```env
+VITE_BASE_URL=https://localhost:7091/
+VITE_APP_COMMENTS_ENDPOINT=api/comments/
+VITE_APP_CAPTCHAS_ENDPOINT=api/captchas/
+VITE_APP_UPLOADS_ENDPOINT=uploads/
+VITE_APP_HUB_ENDPOINT=hubs/comments
+```
 
 From `CommentsSPATask.Client`:
 
